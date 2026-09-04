@@ -31,8 +31,15 @@ export default function App() {
     isLoadingPreset.current = true;
     setIsLoading(true);
 
-    fetch(`/api/data?file=${activePreset}`)
-      .then(res => res.json())
+    // Cargar directamente desde /data/ para Vercel
+    fetch(`/data/${activePreset}`)
+      .then(res => {
+        if (!res.ok) {
+          // Si el archivo no existe, crear uno vacío
+          return { products: [], settings: DEFAULT_SETTINGS };
+        }
+        return res.json();
+      })
       .then(data => {
         if (data) {
           if (data.products) setProducts(data.products);
@@ -74,12 +81,7 @@ export default function App() {
     // Si estamos cargando un preset, NO guardar
     if (isLoadingPreset.current) return;
 
-    fetch(`/api/data?file=${activePreset}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ products, settings })
-    }).catch(() => {});
-
+    // En Vercel solo guardamos en localStorage ya que no tenemos backend
     try {
       localStorage.setItem(`wcommerce_${activePreset}_products`, JSON.stringify(products));
       localStorage.setItem(`wcommerce_${activePreset}_settings`, JSON.stringify(settings));

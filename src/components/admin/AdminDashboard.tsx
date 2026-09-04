@@ -25,14 +25,11 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [newWhatsappNumber, setNewWhatsappNumber] = useState('');
 
-  // Fetch presets on mount
+  // Cargar presets disponibles desde /data/
   useEffect(() => {
-    fetch('/api/presets')
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) setPresets(data);
-      })
-      .catch(console.error);
+    // Lista de presets disponibles en /data/
+    const availablePresets = ['data.json', 'comida.json', 'tecnologia.json', 'repuestos.json', 'farmacia.json'];
+    setPresets(availablePresets);
   }, []);
 
   // Feedback Modal State
@@ -110,45 +107,14 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
   };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingVideo(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64data = reader.result;
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: file.name, data: base64data }),
-        });
-        
-        if (!response.ok) throw new Error('Upload failed');
-        
-        const { url } = await response.json();
-
-        // Si ya había un video local, lo eliminamos
-        if (settings.heroVideoUrl?.startsWith('/uploads/')) {
-          await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: settings.heroVideoUrl }) });
-        }
-
-        setSettings(prev => ({ ...prev, heroVideoUrl: url }));
-      };
-    } catch (err) {
-      console.error(err);
-      setFeedback({
-        isOpen: true,
-        type: 'error',
-        title: 'Error de Subida',
-        message: 'Ocurrió un problema al subir el video.'
-      });
-    } finally {
-      setUploadingVideo(false);
-      if (e.target) e.target.value = '';
-    }
+    // En Vercel no podemos subir archivos, solo usar URLs
+    setFeedback({
+      isOpen: true,
+      type: 'error',
+      title: 'Función no disponible',
+      message: 'En Vercel solo puedes usar URLs de videos. Copia la URL de un video de TikTok o YouTube y pégala en el campo de texto.'
+    });
+    if (e.target) e.target.value = '';
   };
 
   const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,9 +122,6 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
   };
 
   const handleClearVideo = async () => {
-    if (settings.heroVideoUrl?.startsWith('/uploads/')) {
-      await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: settings.heroVideoUrl }) });
-    }
     setSettings(prev => ({ ...prev, heroVideoUrl: '' }));
   };
 
@@ -257,35 +220,27 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
 
               {/* Video Section */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Video de TikTok en Portada (URL o Subir Archivo MP4)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Video en Portada (URL de TikTok, YouTube, etc.)</label>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
                     type="url"
-                    placeholder="URL del video (ej: https://...)"
+                    placeholder="URL del video (ej: https://www.tiktok.com/...)"
                     value={settings.heroVideoUrl || ''}
                     onChange={handleVideoUrlChange}
                     className="flex-1 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success text-sm"
                   />
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>o</span>
-                    <label className="cursor-pointer px-4 py-2 bg-green-200 text-emerald-700 hover:bg-green-200 rounded-lg font-medium flex items-center gap-2 transition-colors whitespace-nowrap">
-                      <Upload className="w-4 h-4" />
-                      {uploadingVideo ? 'Subiendo...' : 'Subir MP4'}
-                      <input type="file" accept="video/mp4,video/*" className="hidden" onChange={handleVideoUpload} disabled={uploadingVideo} />
-                    </label>
-                    {settings.heroVideoUrl && (
-                      <button
-                        onClick={handleClearVideo}
-                        className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition-colors"
-                        title="Quitar video"
-                      >
-                        Quitar
-                      </button>
-                    )}
-                  </div>
+                  {settings.heroVideoUrl && (
+                    <button
+                      onClick={handleClearVideo}
+                      className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg font-medium transition-colors whitespace-nowrap"
+                      title="Quitar video"
+                    >
+                      Quitar URL
+                    </button>
+                  )}
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Este video se muestra en la portada de la tienda en el mockup del teléfono.
+                  En Vercel solo puedes usar URLs públicas de videos. Ej: TikTok, YouTube, Vimeo.
                 </p>
               </div>
 
