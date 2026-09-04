@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 240" class="h-10 w-auto">
+  <defs>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34D399" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Isotipo -->
+  <g transform="translate(10, 35)">
+    <path d="M 20 30 L 48 125 C 50 132 60 132 62 125 L 85 55 C 87 49 95 49 97 55 L 120 125 C 122 132 132 132 134 125 L 150 70 C 151 65 156 62 161 64 L 163 65 C 168 67 170 72 168 77 L 146 142 C 140 160 114 160 108 142 L 91 90 L 74 142 C 68 160 42 160 36 142 L 8 42 C 6 35 12 28 20 30 Z" fill="url(#blueGrad)"/>
+    <path d="M 130 35 L 165 35 C 172 35 177 40 178 47 L 180 58 C 181 65 175 70 168 70 L 140 70 Z" fill="url(#greenGrad)" opacity="0.95"/>
+    <circle cx="70" cy="165" r="7" fill="#1D4ED8"/>
+    <circle cx="130" cy="165" r="7" fill="#059669"/>
+  </g>
+
+  <!-- Texto -->
+  <text x="220" y="138" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="76" letter-spacing="-2">
+    <tspan fill="#1D4ED8">W</tspan><tspan fill="#0F172A">commerce</tspan>
+  </text>
+</svg>

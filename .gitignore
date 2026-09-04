@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.out/
+
+# Coverage
+coverage/
+
+# Environment variables
+.env*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+__tests__/
+__mocks__/
+
+# Project specific
+implementacion.txt
+public/uploads/*
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,6 @@
+{
+  "name": "Flash Sport Shop - Camisetas de Fútbol",
+  "description": "Catálogo minimalista y pedidos mayoristas y al detal de camisetas de fútbol con integración directa a WhatsApp",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
