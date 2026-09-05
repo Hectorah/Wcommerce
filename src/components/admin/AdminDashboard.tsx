@@ -137,7 +137,7 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
       />
 
       {/* Contenido principal */}
-      <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
+      <div className="flex-1 sm:ml-64 p-4 sm:p-6 lg:p-8 overflow-auto">
         <div className="max-w-[1920px] mx-auto space-y-8">
           
           {/* Header simplificado */}

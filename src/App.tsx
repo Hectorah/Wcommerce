@@ -4,6 +4,7 @@ import { JerseyProduct, SiteSettings } from './types';
 import { StoreFront } from './StoreFront';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminLogin } from './components/admin/AdminLogin';
+import { PWAInstaller } from './components/PWAInstaller';
 
 const DEFAULT_SETTINGS: SiteSettings = {
   heroVideoUrl: '',
@@ -120,28 +121,31 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<StoreFront products={products} settings={settings} />} />
-      <Route
-        path="/admin"
-        element={
-          isAdminAuthenticated ? (
-            <AdminDashboard
-              products={products}
-              setProducts={setProducts}
-              settings={settings}
-              setSettings={setSettings}
-              onLogout={handleLogout}
-              activePreset={activePreset}
-              setActivePreset={setActivePreset}
-            />
-          ) : (
-            <AdminLogin onLogin={handleLogin} />
-          )
-        }
-      />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<StoreFront products={products} settings={settings} />} />
+        <Route
+          path="/admin"
+          element={
+            isAdminAuthenticated ? (
+              <AdminDashboard
+                products={products}
+                setProducts={setProducts}
+                settings={settings}
+                setSettings={setSettings}
+                onLogout={handleLogout}
+                activePreset={activePreset}
+                setActivePreset={setActivePreset}
+              />
+            ) : (
+              <AdminLogin onLogin={handleLogin} />
+            )
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <PWAInstaller />
+    </>
   );
 }
 

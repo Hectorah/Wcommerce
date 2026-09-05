@@ -58,7 +58,7 @@ export const Hero: React.FC<HeroProps> = ({
   const progressPercent = Math.min(100, (cartItemCount / WHOLESALE_MIN_ITEMS) * 100);
 
   const titleLine1 = 'Catálogo Oficial';
-  const titleLine2 = 'Portal de Compras Oficial';
+  const titleLine2 = 'Portal de Compras';
   const { displayed: typed1, done: done1 } = useTypewriter(titleLine1, 50, 300);
   const { displayed: typed2, done: done2 } = useTypewriter(titleLine2, 50, done1 ? 100 : 99999);
 
