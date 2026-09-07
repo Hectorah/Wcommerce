@@ -114,7 +114,7 @@ export const Hero: React.FC<HeroProps> = ({
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-0.5">Calidad 1:1</h4>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm mb-0.5">La Mejor Calidad</h4>
                   <p className="text-slate-500 dark:text-slate-400 text-xs hidden sm:block">Bordados y estampados oficiales.</p>
                 </div>
               </div>

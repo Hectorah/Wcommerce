@@ -194,10 +194,10 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
               </div>
               <button
                 onClick={handleOpenCreateModal}
-                className="flex items-center justify-center gap-2 bg-brand-success hover:bg-brand-success text-white px-4 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap"
+                className="flex items-center justify-center gap-2 bg-brand-success hover:bg-brand-success text-white px-4 py-3 sm:px-4 sm:py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm whitespace-nowrap touch-feedback min-w-[52px] min-h-[52px] sm:min-w-auto sm:min-h-auto"
               >
-                <Plus className="w-4 h-4" />
-                <span>Agregar Producto</span>
+                <Plus className="w-5 h-5 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Agregar Producto</span>
               </button>
             </div>
             

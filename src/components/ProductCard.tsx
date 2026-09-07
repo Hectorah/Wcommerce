@@ -69,10 +69,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               e.stopPropagation();
               onOpenDetails(product);
             }}
-            className="p-1.5 rounded-lg bg-white/90 dark:bg-slate-900/90 hover:bg-brand-primary hover:text-slate-950 text-slate-700 dark:text-slate-300 backdrop-blur transition-all pointer-events-auto shadow-sm"
+            className="p-2 sm:p-1.5 rounded-lg bg-white/90 dark:bg-slate-900/90 hover:bg-brand-primary hover:text-slate-950 text-slate-700 dark:text-slate-300 backdrop-blur transition-all pointer-events-auto shadow-sm flex items-center justify-center min-w-[44px] min-h-[44px] touch-feedback"
             title="Ver detalles"
           >
-            <Eye className="w-3.5 h-3.5" />
+            <Eye className="w-5 h-5 sm:w-3.5 sm:h-3.5" />
           </button>
         </div>
 
@@ -204,8 +204,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               </>
             ) : (
               <>
-                <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                <span className="truncate">Agregar</span>
+                <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                <span className="truncate hidden xs:inline">Agregar</span>
               </>
             )}
           </button>

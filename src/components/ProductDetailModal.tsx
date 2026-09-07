@@ -58,13 +58,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       {/* Modal Box */}
       <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl z-10 animate-scale-up text-slate-900 dark:text-slate-100">
         
-        {/* Close Button */}
+        {/* Close Button - Mejorado para móvil */}
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 p-2 rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+          className="absolute top-3 right-3 z-20 p-3 sm:p-2 rounded-full bg-black/70 hover:bg-black/90 text-white transition-colors shadow-lg touch-feedback min-w-[52px] min-h-[52px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center"
+          aria-label="Cerrar"
         >
-          <X className="w-4 h-4" />
+          <X className="w-6 h-6 sm:w-4 sm:h-4" />
         </button>
 
         <div className="grid grid-cols-1 sm:grid-cols-2">
@@ -75,7 +76,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               {activeMediaType === 'video' && product.video ? (
                 <video
                   src={product.video}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full sm:object-cover object-contain"
                   autoPlay
                   loop
                   muted
@@ -86,7 +87,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <img
                   src={currentImage}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full sm:object-cover object-contain"
                   referrerPolicy="no-referrer"
                 />
               )}
@@ -288,8 +289,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Agregar al Pedido</span>
+                    <Plus className="w-4 h-4 sm:w-3.5 sm:h-3.5 stroke-[3]" />
+                    <span className="hidden xs:inline">Agregar al Pedido</span>
+                    <span className="xs:hidden">Agregar</span>
                   </>
                 )}
               </button>

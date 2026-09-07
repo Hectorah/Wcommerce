@@ -76,14 +76,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               id="theme-toggle-btn"
               type="button"
               onClick={onToggleTheme}
-              className="p-2 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer active:scale-95"
+              className="p-2.5 sm:p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px] touch-feedback"
               title={theme === 'dark' ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
               aria-label="Alternar modo claro y oscuro"
             >
               {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-brand-primary animate-spin-slow" />
+                <Sun className="w-5 h-5 sm:w-4 sm:h-4 text-brand-primary animate-spin-slow" />
               ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
+                <Moon className="w-5 h-5 sm:w-4 sm:h-4 text-slate-700" />
               )}
             </button>
 

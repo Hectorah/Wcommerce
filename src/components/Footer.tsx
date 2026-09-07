@@ -30,7 +30,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenSizeGuide, onOpenWholesale
           <div className="space-y-2">
             <FlashLogo size="sm" showSubtitle={true} className="items-start" />
             <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed mt-2">
-              Los Reyes de las Camisetas de Fútbol. Especialistas en camisetas para fanáticos y revendedores. Precios especiales al mayor desde 6 piezas.
+              Plataforma de comercio electrónico versátil y moderna para cualquier rubro. Gestión profesional de inventario y ventas para negocios de todos los tamaños.
             </p>
           </div>
 
