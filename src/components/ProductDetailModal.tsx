@@ -72,11 +72,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           
           {/* Left Column: Image with badges & gallery */}
           <div className="bg-slate-100 dark:bg-slate-950 flex flex-col h-full">
-            <div className="relative aspect-[4/5] sm:aspect-auto sm:flex-1">
+            <div className="relative aspect-[4/5] sm:aspect-auto sm:flex-1 flex items-center justify-center">
               {activeMediaType === 'video' && product.video ? (
                 <video
                   src={product.video}
-                  className="w-full h-full sm:object-cover object-contain"
+                  className="w-full h-full sm:object-cover object-contain max-h-[80vh]"
                   autoPlay
                   loop
                   muted
@@ -87,7 +87,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <img
                   src={currentImage}
                   alt={product.name}
-                  className="w-full h-full sm:object-cover object-contain"
+                  className="w-auto h-auto max-w-full max-h-full sm:object-cover object-contain"
                   referrerPolicy="no-referrer"
                 />
               )}
@@ -115,7 +115,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                           : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-contain" />
                     </button>
                   ))}
 

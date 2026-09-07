@@ -141,9 +141,9 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
           </div>
 
-          {/* RIGHT COLUMN — Phone Mockup (TikTok Video) */}
-          <div className="w-full lg:w-auto lg:min-w-[440px] xl:min-w-[520px] flex justify-center">
-            {settings?.heroVideoUrl ? (
+          {/* RIGHT COLUMN — Phone Mockup (TikTok Video) - Solo muestra cuando hay video */}
+          {settings?.heroVideoUrl && (
+            <div className="w-full lg:w-auto lg:min-w-[440px] xl:min-w-[520px] flex justify-center">
               <div className="relative w-[280px] sm:w-[320px] aspect-[9/19.5] bg-black rounded-[3rem] shadow-2xl overflow-hidden border-[8px] border-slate-900 ring-4 ring-slate-800 flex-shrink-0">
                 {/* Notch */}
                 <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-20 pointer-events-none">
@@ -170,21 +170,11 @@ export const Hero: React.FC<HeroProps> = ({
                   {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
                 </button>
               </div>
-            ) : (
-              <div className="relative w-[280px] sm:w-[320px] aspect-[9/19.5] bg-slate-100 dark:bg-slate-900 rounded-[3rem] shadow-2xl overflow-hidden border-[8px] border-slate-900 ring-4 ring-slate-800 flex items-center justify-center text-center p-6">
-                <div className="absolute top-0 inset-x-0 h-6 flex justify-center z-20 pointer-events-none">
-                  <div className="w-24 h-5 bg-slate-900 rounded-b-xl" />
-                </div>
-                <div>
-                  <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Zap className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <p className="text-sm font-medium text-slate-500">Video no configurado</p>
-                  <p className="text-xs text-slate-400 mt-2">Puedes añadir un video de TikTok desde el Panel de Administración.</p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+          
+          {/* Si no hay video, la columna derecha desaparece completamente */}
+          {!settings?.heroVideoUrl && <div className="lg:min-w-[440px] xl:min-w-[520px] hidden lg:block" />}
 
         </div>
       </div>
