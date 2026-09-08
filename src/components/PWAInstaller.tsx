@@ -17,6 +17,36 @@ export function PWAInstaller() {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
 
+  // Detectar si es dispositivo móvil y no PC/desktop
+  const isMobileDevice = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    const isTablet = /ipad|tablet|playbook|silk/i.test(userAgent);
+    
+    // Detectar específicamente PC/desktop
+    const isDesktop = /windows|macintosh|linux/i.test(userAgent) && !/mobile|android|iphone/i.test(userAgent);
+    const screenWidth = window.innerWidth;
+    
+    // Solo considerar móvil si:
+    // 1. Tiene user agent de móvil/tablet
+    // 2. NO es desktop
+    // 3. Tiene pantalla relativamente pequeña (< 1024px)
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    return (isMobile || isTablet || isTouchDevice) && !isDesktop && screenWidth < 1024;
+  };
+
+  // Detectar si ya se mostró el banner (usando localStorage)
+  const hasBannerBeenShown = () => {
+    const shown = localStorage.getItem('pwaBannerShown');
+    return shown === 'true';
+  };
+
+  // Marcar que el banner ya fue mostrado
+  const markBannerAsShown = () => {
+    localStorage.setItem('pwaBannerShown', 'true');
+  };
+
   // Detectar si es iOS y si ya está instalada como PWA
   useEffect(() => {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
@@ -26,11 +56,17 @@ export function PWAInstaller() {
                             (window.navigator as any).standalone === true;
     setIsStandalone(isStandaloneMode);
     
-    // Mostrar banner si no está instalada y es móvil
-    if (!isStandaloneMode && (isIOSDevice || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))) {
-      setTimeout(() => {
+    // Mostrar banner solo si:
+    // 1. No está instalada como PWA
+    // 2. Es dispositivo móvil (no PC)
+    // 3. El banner NO ha sido mostrado anteriormente
+    if (!isStandaloneMode && isMobileDevice() && !hasBannerBeenShown()) {
+      // Mostrar después de 5 segundos (más tiempo que antes)
+      const timer = setTimeout(() => {
         setShowBanner(true);
-      }, 3000);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
     }
   }, []);
 
@@ -40,7 +76,11 @@ export function PWAInstaller() {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setIsInstallable(true);
-      setShowBanner(true);
+      
+      // Mostrar banner solo si no se ha mostrado antes
+      if (!hasBannerBeenShown() && isMobileDevice()) {
+        setShowBanner(true);
+      }
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -49,6 +89,8 @@ export function PWAInstaller() {
     if (window.matchMedia('(display-mode: standalone)').matches) {
       setIsInstallable(false);
       setShowBanner(false);
+      // Marcar como mostrado si ya está instalado
+      markBannerAsShown();
     }
 
     return () => {
@@ -68,11 +110,21 @@ export function PWAInstaller() {
       console.log('Usuario aceptó la instalación');
       setShowBanner(false);
       setIsInstallable(false);
+      // Marcar como mostrado independientemente de si instaló o no
+      markBannerAsShown();
     } else {
       console.log('Usuario rechazó la instalación');
+      // Aún así marcar como mostrado para que no vuelva a aparecer
+      markBannerAsShown();
     }
     
     setDeferredPrompt(null);
+  };
+
+  // Cerrar banner (usuario hace clic en X o "Más tarde")
+  const handleCloseBanner = () => {
+    setShowBanner(false);
+    markBannerAsShown(); // Marcar como mostrado para que no vuelva a aparecer
   };
 
   // Instrucciones para iOS
@@ -106,7 +158,7 @@ export function PWAInstaller() {
             </div>
           </div>
           <button
-            onClick={() => setShowBanner(false)}
+            onClick={handleCloseBanner}
             className="text-slate-400 hover:text-slate-600 transition-colors p-1"
             aria-label="Cerrar"
           >
@@ -153,10 +205,10 @@ export function PWAInstaller() {
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>App PWA • Sin descarga de tienda</span>
             <button
-              onClick={() => setShowBanner(false)}
+              onClick={handleCloseBanner}
               className="text-slate-400 hover:text-slate-600 underline"
             >
-              Más tarde
+              No mostrar de nuevo
             </button>
           </div>
         </div>
