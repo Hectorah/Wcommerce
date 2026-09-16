@@ -1,5 +1,16 @@
 import React, { useState } from 'react';
-import { Package, Tag, Settings, Users, BarChart, Home, LogOut, FileJson, Menu, X } from 'lucide-react';
+import { Package, Home, LogOut, FileJson, Menu, X, Store, Palette, Share2, MapPin, Image as ImageIcon } from 'lucide-react';
+
+export type AdminSection = 'productos' | 'identidad' | 'apariencia' | 'contacto' | 'sedes' | 'banners';
+
+const SECTION_ITEMS: { id: AdminSection; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: 'productos', label: 'Productos', icon: Package },
+  { id: 'identidad', label: 'Identidad & Hero', icon: Store },
+  { id: 'apariencia', label: 'Apariencia', icon: Palette },
+  { id: 'contacto', label: 'Contacto', icon: Share2 },
+  { id: 'sedes', label: 'Sedes Físicas', icon: MapPin },
+  { id: 'banners', label: 'Banners', icon: ImageIcon },
+];
 
 interface AdminSidebarProps {
   activePreset: string;
@@ -7,14 +18,18 @@ interface AdminSidebarProps {
   setActivePreset: (val: string) => void;
   onLogout: () => void;
   onNavigateHome: () => void;
+  activeSection: AdminSection;
+  onSectionChange: (section: AdminSection) => void;
 }
 
-export function AdminSidebar({ 
-  activePreset, 
-  presets, 
-  setActivePreset, 
+export function AdminSidebar({
+  activePreset,
+  presets,
+  setActivePreset,
   onLogout,
-  onNavigateHome 
+  onNavigateHome,
+  activeSection,
+  onSectionChange,
 }: AdminSidebarProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -27,9 +42,9 @@ export function AdminSidebar({
       {/* Logo y header */}
       <div className="p-4 sm:p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <img 
-            src="/icon.png" 
-            alt="Wcommerce Logo" 
+          <img
+            src="/icon.png"
+            alt="Wcommerce Logo"
             className="h-10 w-10 object-contain"
           />
           <div className="flex-1">
@@ -53,8 +68,8 @@ export function AdminSidebar({
           <FileJson className="w-4 h-4 mr-2" />
           <span className="font-medium">Preset Activo</span>
         </div>
-        <select 
-          value={activePreset} 
+        <select
+          value={activePreset}
           onChange={(e) => setActivePreset(e.target.value)}
           className="w-full bg-slate-800 border border-slate-700 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-primary cursor-pointer"
         >
@@ -83,55 +98,28 @@ export function AdminSidebar({
           <div className="text-xs text-slate-500 uppercase tracking-wider font-bold mt-6 mb-2 px-3">
             Gestión
           </div>
-          
-          <a 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 bg-brand-primary/20 text-brand-primary rounded-lg text-sm font-medium"
-          >
-            <Package className="w-4 h-4" />
-            <span>Productos</span>
-          </a>
 
-          <a 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <Tag className="w-4 h-4" />
-            <span>Categorías</span>
-          </a>
-
-          <a 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <Users className="w-4 h-4" />
-            <span>Clientes</span>
-          </a>
-
-          <a 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <BarChart className="w-4 h-4" />
-            <span>Reportes</span>
-          </a>
-
-          <div className="text-xs text-slate-500 uppercase tracking-wider font-bold mt-6 mb-2 px-3">
-            Configuración
-          </div>
-
-          <a 
-            href="#" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="flex items-center gap-3 px-3 py-2.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-sm font-medium"
-          >
-            <Settings className="w-4 h-4" />
-            <span>Ajustes</span>
-          </a>
+          {SECTION_ITEMS.map(item => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  onSectionChange(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium ${
+                  isActive
+                    ? 'bg-brand-primary/20 text-brand-primary'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
       </div>
 
@@ -170,7 +158,7 @@ export function AdminSidebar({
       {/* Overlay y sidebar para móvil */}
       {isMobileMenuOpen && (
         <>
-          <div 
+          <div
             className="sm:hidden fixed inset-0 bg-black/50 z-40"
             onClick={toggleMobileMenu}
             aria-hidden="true"

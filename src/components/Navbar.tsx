@@ -1,8 +1,7 @@
 import React from 'react';
-import { ShoppingBag, ShieldCheck, HelpCircle, Sparkles, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, ShieldCheck, HelpCircle, Sun, Moon } from 'lucide-react';
 import { FlashLogo } from './FlashLogo';
 import { WhatsAppIcon } from './Icons';
-import { DEFAULT_WHATSAPP_PHONE } from '../data/mockProducts';
 
 interface NavbarProps {
   cartItemCount: number;
@@ -13,6 +12,8 @@ interface NavbarProps {
   onOpenCart: () => void;
   onOpenSizeGuide: () => void;
   onOpenWholesaleInfo: () => void;
+  whatsappChannelUrl?: string;
+  announcement?: { text: string; link: string } | null;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -24,16 +25,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenSizeGuide,
   onOpenWholesaleInfo,
+  whatsappChannelUrl = 'https://whatsapp.com/channel/0029Vb7RtomDZ4LQyRTqzJ1J',
+  announcement,
 }) => {
   return (
+
+
     <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200">
-      {/* Top micro-banner
-      <div className="bg-slate-950 dark:bg-black text-white text-[11px] sm:text-xs font-semibold py-1.5 px-4 text-center flex items-center justify-center gap-2 border-b border-slate-800">
-        <Sparkles className="w-3.5 h-3.5 text-brand-primary" />
-        <span>
-          <strong className="text-brand-primary font-extrabold uppercase">Descuento Mayorista:</strong>  camisetas por solo <span className="underline decoration-brand-primary font-mono font-bold">$18 USD c/u</span>
-        </span>
-      </div> */}
 
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
         <div className="flex items-center justify-between h-16 sm:h-20 gap-2">
@@ -90,7 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Quick WhatsApp Channel */}
             <div className="hidden sm:block">
               <a
-                href="https://whatsapp.com/channel/0029Vb7RtomDZ4LQyRTqzJ1J"
+                href={whatsappChannelUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold text-brand-success dark:text-brand-success bg-green-50 hover:bg-green-200 dark:bg-brand-success/20 dark:hover:bg-brand-success/20 rounded-full transition-colors border border-green-200/50 dark:border-emerald-800/50"

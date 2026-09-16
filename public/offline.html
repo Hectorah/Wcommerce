@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +20,7 @@
       text-align: center;
       padding: 20px;
     }
-    
+
     .container {
       max-width: 500px;
       padding: 40px;
@@ -28,7 +29,7 @@
       border-radius: 20px;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
-    
+
     .icon {
       width: 120px;
       height: 120px;
@@ -40,27 +41,27 @@
       justify-content: center;
       font-size: 60px;
     }
-    
+
     h1 {
       font-size: 28px;
       margin-bottom: 15px;
       color: #60a5fa;
     }
-    
+
     p {
       font-size: 16px;
       line-height: 1.6;
       margin-bottom: 25px;
       color: #cbd5e1;
     }
-    
+
     .actions {
       display: flex;
       gap: 15px;
       justify-content: center;
       flex-wrap: wrap;
     }
-    
+
     button {
       padding: 12px 24px;
       border: none;
@@ -70,35 +71,36 @@
       cursor: pointer;
       transition: transform 0.2s, background 0.2s;
     }
-    
+
     button:hover {
       transform: translateY(-2px);
     }
-    
+
     .primary-btn {
       background: #3b82f6;
       color: white;
     }
-    
+
     .secondary-btn {
       background: rgba(255, 255, 255, 0.2);
       color: white;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="icon">📱</div>
     <h1>Sin conexión a Internet</h1>
     <p>Parece que no tienes conexión a Internet. Algunas funciones pueden no estar disponibles.</p>
     <p>Puedes seguir navegando por los productos que ya has visto o esperar a que se restablezca la conexión.</p>
-    
+
     <div class="actions">
       <button class="primary-btn" onclick="window.location.reload()">Reintentar</button>
       <button class="secondary-btn" onclick="window.history.back()">Volver</button>
     </div>
   </div>
-  
+
   <script>
     // Verificar conexión periódicamente
     setInterval(() => {
@@ -108,4 +110,5 @@
     }, 5000);
   </script>
 </body>
+
 </html>

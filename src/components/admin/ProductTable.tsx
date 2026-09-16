@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { JerseyProduct } from '../../types';
-import { Edit2, Trash2, Image as ImageIcon, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ProductThumb, ProductActionButtons, ProductStockToggle } from './ProductTableParts';
 
 interface ProductTableProps {
   products: JerseyProduct[];
@@ -81,13 +82,7 @@ export function ProductTable({ products, onEdit, onDelete, onToggleStock }: Prod
               <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                      {product.image ? (
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-6 h-6 text-slate-400" />
-                      )}
-                    </div>
+                    <ProductThumb src={product.image} alt={product.name} />
                     <div>
                       <p className="font-semibold text-slate-900 text-sm">{product.name}</p>
                       <p className="text-xs text-slate-500">{product.team}</p>
@@ -115,38 +110,18 @@ export function ProductTable({ products, onEdit, onDelete, onToggleStock }: Prod
                   </div>
                 </td>
                 <td className="py-3 px-4 text-center">
-                  <button
-                    onClick={() => onToggleStock(product.id)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-success focus:ring-offset-2 ${
-                      product.inStock !== false ? 'bg-brand-success' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        product.inStock !== false ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                  <p className="text-[10px] mt-1 text-slate-500">
-                    {product.inStock !== false ? 'Disponible' : 'Agotado'}
-                  </p>
+                  <ProductStockToggle
+                    inStock={product.inStock !== false}
+                    onToggle={() => onToggleStock(product.id)}
+                    layout="column"
+                  />
                 </td>
                 <td className="py-3 px-4 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => onEdit(product)}
-                      className="p-1.5 text-slate-500 hover:text-brand-success bg-slate-100 hover:bg-green-50 rounded transition-colors"
-                      title="Editar"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(product.id)}
-                      className="p-1.5 text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 rounded transition-colors"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <ProductActionButtons
+                      onEdit={() => onEdit(product)}
+                      onDelete={() => onDelete(product.id)}
+                    />
                   </div>
                 </td>
               </tr>
@@ -173,14 +148,8 @@ export function ProductTable({ products, onEdit, onDelete, onToggleStock }: Prod
             {paginatedProducts.map((product) => (
               <div key={product.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex items-start gap-3">
-                  <div className="w-16 h-16 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-slate-400" />
-                    )}
-                  </div>
-                  
+                  <ProductThumb src={product.image} alt={product.name} size="md" />
+
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -188,20 +157,10 @@ export function ProductTable({ products, onEdit, onDelete, onToggleStock }: Prod
                         <p className="text-xs text-slate-500 mt-1">{product.team}</p>
                       </div>
                       <div className="flex items-center gap-2 ml-2">
-                        <button
-                          onClick={() => onEdit(product)}
-                          className="p-1.5 text-slate-500 hover:text-brand-success bg-slate-100 hover:bg-green-50 rounded transition-colors"
-                          title="Editar"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(product.id)}
-                          className="p-1.5 text-slate-500 hover:text-red-600 bg-slate-100 hover:bg-red-50 rounded transition-colors"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <ProductActionButtons
+                          onEdit={() => onEdit(product)}
+                          onDelete={() => onDelete(product.id)}
+                        />
                       </div>
                     </div>
 
@@ -230,23 +189,11 @@ export function ProductTable({ products, onEdit, onDelete, onToggleStock }: Prod
                     </div>
 
                     <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => onToggleStock(product.id)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-success focus:ring-offset-2 ${
-                            product.inStock !== false ? 'bg-brand-success' : 'bg-slate-300'
-                          }`}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                              product.inStock !== false ? 'translate-x-6' : 'translate-x-1'
-                            }`}
-                          />
-                        </button>
-                        <span className="text-xs text-slate-500">
-                          {product.inStock !== false ? 'Disponible' : 'Agotado'}
-                        </span>
-                      </div>
+                      <ProductStockToggle
+                        inStock={product.inStock !== false}
+                        onToggle={() => onToggleStock(product.id)}
+                        layout="row"
+                      />
                       <span className="text-xs text-brand-primary font-medium">
                         Mayor: ${product.wholesalePrice}
                       </span>

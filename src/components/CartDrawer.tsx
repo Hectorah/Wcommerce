@@ -14,6 +14,7 @@ interface CartDrawerProps {
   onRemoveItem: (cartItemId: string) => void;
   onClearCart: () => void;
   whatsappNumbers: string[];
+  storeName?: string;
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -24,6 +25,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onRemoveItem,
   onClearCart,
   whatsappNumbers,
+  storeName,
 }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
@@ -52,7 +54,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       return;
     }
     try {
-      const message = generateWhatsAppMessage(cartItems, customerInfo, summary);
+      const message = generateWhatsAppMessage(cartItems, customerInfo, summary, storeName);
       const url = buildWhatsAppUrl(selectedPhone, message);
       (e.currentTarget as HTMLAnchorElement).href = url;
     } catch (err) {

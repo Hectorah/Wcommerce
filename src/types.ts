@@ -45,4 +45,50 @@ export interface CustomerInfo {
 export interface SiteSettings {
   heroVideoUrl: string; // URL for the TikTok video (MP4 or embed URL)
   whatsappNumbers: string[]; // Hasta 4 números para pedidos (rotación automática)
+
+  // Identidad y textos de la tienda
+  storeName: string;
+  storeTagline: string;
+  heroTitleLine1: string;
+  heroTitleLine2: string;
+  heroSubtitle: string;
+
+  // Barra de anuncio superior
+  announcementEnabled: boolean;
+  announcementText: string;
+  announcementLink: string;
+
+  // Redes y contacto
+  whatsappChannelUrl: string;
+  instagramUrl: string;
+  tiktokUrl: string;
+  facebookUrl: string;
+
+  // Tema de marca (colores)
+  brandPrimaryColor: string;
+  brandSuccessColor: string;
+
+  // Sedes físicas
+  stores: StoreLocation[];
+
+  // Banners de portada
+  banners: HomeBanner[];
+}
+
+export interface StoreLocation {
+  id: string;
+  name: string;
+  address: string;
+  mapsUrl: string;
+  hours: string;
+}
+
+export interface HomeBanner {
+  id: string;
+  title: string;
+  subtitle: string;
+  image: string;
+  ctaText: string;
+  link: string;
+  active: boolean;
 }

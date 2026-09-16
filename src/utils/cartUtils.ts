@@ -39,7 +39,8 @@ export function calculateCartSummary(cartItems: CartItem[]) {
 export function generateWhatsAppMessage(
   cartItems: CartItem[],
   customerInfo: CustomerInfo,
-  summary: ReturnType<typeof calculateCartSummary>
+  summary: ReturnType<typeof calculateCartSummary>,
+  storeName: string = STORE_NAME
 ): string {
   const itemsList = cartItems
     .map((item) => {
@@ -59,7 +60,7 @@ export function generateWhatsAppMessage(
   const customerCity = customerInfo.city.trim() || 'No especificada';
   const notesText = customerInfo.notes?.trim() ? `\n📝 *Notas/Dorsales:* ${customerInfo.notes.trim()}` : '';
 
-  return `¡Hola! Quiero confirmar el siguiente pedido en *${STORE_NAME}*:
+  return `¡Hola! Quiero confirmar el siguiente pedido en *${storeName}*:
 
 📋 *DETALLE DEL PEDIDO:*
 ${itemsList}

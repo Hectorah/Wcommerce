@@ -3,6 +3,7 @@ import { JerseyProduct, JerseySize, CartItem, ProductCategory, SiteSettings } fr
 import { calculateCartSummary } from './utils/cartUtils';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
+import { HeroBannerCarousel } from './components/HeroBannerCarousel';
 import { FilterBar } from './components/FilterBar';
 import { ProductGrid } from './components/ProductGrid';
 import { CartDrawer } from './components/CartDrawer';
@@ -220,6 +221,8 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
         onOpenCart={() => setIsCartOpen(true)}
         onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
         onOpenWholesaleInfo={() => setIsWholesaleInfoOpen(true)}
+        whatsappChannelUrl={settings.whatsappChannelUrl}
+        announcement={settings.announcementEnabled ? { text: settings.announcementText, link: settings.announcementLink } : null}
       />
 
       {/* Hero / Banner Section with Minimalist Calculator */}
@@ -230,6 +233,9 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
         onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
         settings={settings}
       />
+
+      {/* Carrusel de banners promocionales (configurable en el panel) */}
+      <HeroBannerCarousel banners={settings.banners} />
 
       {/* Sticky Filter & Search Bar */}
       <FilterBar
@@ -283,6 +289,7 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
         onRemoveItem={handleRemoveFromCart}
         onClearCart={handleClearCart}
         whatsappNumbers={settings.whatsappNumbers || []}
+        storeName={settings.storeName}
       />
 
       {/* Product Detail & Customization Modal */}
@@ -307,6 +314,8 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
       <WholesaleInfoModal
         isOpen={isWholesaleInfoOpen}
         onClose={() => setIsWholesaleInfoOpen(false)}
+        storeName={settings.storeName}
+        whatsappPhone={settings.whatsappNumbers?.[0] || ''}
       />
 
 
@@ -317,6 +326,7 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
       <Footer
         onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
         onOpenWholesaleInfo={() => setIsWholesaleInfoOpen(true)}
+        settings={settings}
       />
 
     </div>

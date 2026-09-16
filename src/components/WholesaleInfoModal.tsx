@@ -6,10 +6,15 @@ import { WhatsAppIcon } from './Icons';
 interface WholesaleInfoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  storeName?: string;
+  whatsappPhone?: string;
 }
 
-export const WholesaleInfoModal: React.FC<WholesaleInfoModalProps> = ({ isOpen, onClose }) => {
+export const WholesaleInfoModal: React.FC<WholesaleInfoModalProps> = ({ isOpen, onClose, storeName, whatsappPhone }) => {
   if (!isOpen) return null;
+
+  const defaultStoreName = storeName || 'Flash Sport Shop';
+  const phone = whatsappPhone || DEFAULT_WHATSAPP_PHONE;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-4">
@@ -26,7 +31,7 @@ export const WholesaleInfoModal: React.FC<WholesaleInfoModalProps> = ({ isOpen, 
             </div>
             <div>
               <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">Tarifas & Beneficios Mayoristas</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Emprende y maximiza tu margen con Flash Sport Shop</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Emprende y maximiza tu margen con {defaultStoreName}</p>
             </div>
           </div>
           <button

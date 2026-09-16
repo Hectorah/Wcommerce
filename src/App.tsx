@@ -1,17 +1,55 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { JerseyProduct, SiteSettings } from './types';
 import { StoreFront } from './StoreFront';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminLogin } from './components/admin/AdminLogin';
 import { PWAInstaller } from './components/PWAInstaller';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const DEFAULT_SETTINGS: SiteSettings = {
   heroVideoUrl: '',
-  whatsappNumbers: []
+  whatsappNumbers: [],
+  storeName: 'Flash Sport Shop',
+  storeTagline: 'Camisetas de Fútbol',
+  heroTitleLine1: 'Catálogo Oficial',
+  heroTitleLine2: 'Portal de Compras',
+  heroSubtitle: 'Selecciona tus modelos favoritos, calcula tu tarifa al detal o mayorista en tiempo real y envía tu pedido directo a WhatsApp.',
+  announcementEnabled: false,
+  announcementText: 'Descuento Mayorista: camisetas a $18 USD c/u',
+  announcementLink: '',
+  whatsappChannelUrl: 'https://whatsapp.com/channel/0029Vb7RtomDZ4LQyRTqzJ1J',
+  instagramUrl: '',
+  tiktokUrl: '',
+  facebookUrl: '',
+  brandPrimaryColor: '#2563EB',
+  brandSuccessColor: '#10B981',
+  stores: [
+    {
+      id: 'cc-cristal',
+      name: 'CC Cristal — Naguanagua',
+      address: '2do Piso, CC Cristal, Naguanagua, Carabobo',
+      mapsUrl: 'https://www.google.com/maps/search/CC+Cristal+Naguanagua+Carabobo+Venezuela',
+      hours: 'Lun–Sáb: 9am – 7pm',
+    },
+  ],
+  banners: [],
 };
 
+// Completa settings viejos (localStorage/JSON) con los defaults actuales sin romper arrays
+function normalizeSettings(raw: unknown): SiteSettings {
+  const s = (raw && typeof raw === 'object' ? raw : {}) as Partial<SiteSettings>;
+  return {
+    ...DEFAULT_SETTINGS,
+    ...s,
+    whatsappNumbers: Array.isArray(s.whatsappNumbers) ? s.whatsappNumbers : [],
+    stores: Array.isArray(s.stores) ? s.stores : DEFAULT_SETTINGS.stores,
+    banners: Array.isArray(s.banners) ? s.banners : [],
+  };
+}
+
 export default function App() {
+  const location = useLocation();
   const [activePreset, setActivePreset] = useState<string>(() => {
     try {
       return localStorage.getItem('wcommerce_active_preset') || 'data.json';
@@ -41,14 +79,29 @@ export default function App() {
         }
         return res.json();
       })
-      .then(data => {
-        if (data) {
-          if (data.products) setProducts(data.products);
-          if (data.settings) setSettings(data.settings);
-        } else {
-          setProducts([]);
-          setSettings(DEFAULT_SETTINGS);
-        }
+      .then((data) => {
+        // Base: contenido del archivo /data/<preset>.json
+        const baseProducts = data?.products ?? [];
+        const baseSettings = normalizeSettings(data?.settings);
+
+        // Override: si el admin guardó cambios para este preset (localStorage),
+        // se priorizan para que sobrevivan a la recarga del navegador.
+        let finalProducts = baseProducts;
+        let finalSettings = baseSettings;
+        try {
+          const savedProducts = localStorage.getItem(`wcommerce_${activePreset}_products`);
+          const savedSettings = localStorage.getItem(`wcommerce_${activePreset}_settings`);
+          if (savedProducts !== null) {
+            const parsed = JSON.parse(savedProducts);
+            if (Array.isArray(parsed)) finalProducts = parsed;
+          }
+          if (savedSettings !== null) {
+            finalSettings = normalizeSettings(JSON.parse(savedSettings));
+          }
+        } catch {}
+
+        setProducts(finalProducts);
+        setSettings(finalSettings);
       })
       .catch(err => {
         console.error('Error cargando preset:', err);
@@ -89,6 +142,23 @@ export default function App() {
     } catch {}
   }, [products, settings]);
 
+  // Aplicar tema de marca (colores) + SEO dinámico por preset
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--color-brand-primary', settings.brandPrimaryColor || DEFAULT_SETTINGS.brandPrimaryColor);
+    root.style.setProperty('--color-brand-success', settings.brandSuccessColor || DEFAULT_SETTINGS.brandSuccessColor);
+
+    document.title = settings.storeName
+      ? `${settings.storeName}${settings.storeTagline ? ` — ${settings.storeTagline}` : ''}`
+      : 'Wcommerce';
+
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && settings.heroSubtitle) metaDesc.setAttribute('content', settings.heroSubtitle);
+
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme && settings.brandPrimaryColor) metaTheme.setAttribute('content', settings.brandPrimaryColor);
+  }, [settings]);
+
   // Admin Authentication State
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     try {
@@ -122,28 +192,31 @@ export default function App() {
 
   return (
     <>
-      <Routes>
-        <Route path="/" element={<StoreFront products={products} settings={settings} />} />
-        <Route
-          path="/admin"
-          element={
-            isAdminAuthenticated ? (
-              <AdminDashboard
-                products={products}
-                setProducts={setProducts}
-                settings={settings}
-                setSettings={setSettings}
-                onLogout={handleLogout}
-                activePreset={activePreset}
-                setActivePreset={setActivePreset}
-              />
-            ) : (
-              <AdminLogin onLogin={handleLogin} />
-            )
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      {/* key=pathname: al navegar el boundary se reinicia y no queda "pegado" el error */}
+      <ErrorBoundary key={location.pathname}>
+        <Routes>
+          <Route path="/" element={<StoreFront products={products} settings={settings} />} />
+          <Route
+            path="/admin"
+            element={
+              isAdminAuthenticated ? (
+                <AdminDashboard
+                  products={products}
+                  setProducts={setProducts}
+                  settings={settings}
+                  setSettings={setSettings}
+                  onLogout={handleLogout}
+                  activePreset={activePreset}
+                  setActivePreset={setActivePreset}
+                />
+              ) : (
+                <AdminLogin onLogin={handleLogin} />
+              )
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </ErrorBoundary>
       <PWAInstaller />
     </>
   );

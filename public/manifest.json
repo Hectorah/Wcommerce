@@ -1,5 +1,5 @@
 {
-  "name": "Wcommerce - Plataforma E-commerce",
+  "name": "Wcommerce",
   "short_name": "Wcommerce",
   "description": "Plataforma de comercio electrónico versátil y moderna para cualquier rubro",
   "start_url": "/",
@@ -28,7 +28,11 @@
       "purpose": "apple-touch-icon"
     }
   ],
-  "categories": ["shopping", "business", "ecommerce"],
+  "categories": [
+    "shopping",
+    "business",
+    "ecommerce"
+  ],
   "lang": "es",
   "dir": "ltr",
   "screenshots": [

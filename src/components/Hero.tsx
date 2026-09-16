@@ -57,8 +57,9 @@ export const Hero: React.FC<HeroProps> = ({
   const itemsLeft = Math.max(0, WHOLESALE_MIN_ITEMS - cartItemCount);
   const progressPercent = Math.min(100, (cartItemCount / WHOLESALE_MIN_ITEMS) * 100);
 
-  const titleLine1 = 'Catálogo Oficial';
-  const titleLine2 = 'Portal de Compras';
+  const titleLine1 = settings?.heroTitleLine1 || 'Catálogo Oficial';
+  const titleLine2 = settings?.heroTitleLine2 || 'Portal de Compras';
+  const subtitle = settings?.heroSubtitle || 'Selecciona tus modelos favoritos, calcula tu tarifa al detal o mayorista en tiempo real y envía tu pedido directo a WhatsApp.';
   const { displayed: typed1, done: done1 } = useTypewriter(titleLine1, 50, 300);
   const { displayed: typed2, done: done2 } = useTypewriter(titleLine2, 50, done1 ? 100 : 99999);
 
@@ -104,7 +105,7 @@ export const Hero: React.FC<HeroProps> = ({
             </h1>
 
             <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Selecciona tus modelos favoritos, calcula tu tarifa al detal o mayorista en tiempo real y envía tu pedido directo a WhatsApp.
+              {subtitle}
             </p>
 
             {/* Assurances row (Value Pillars) */}

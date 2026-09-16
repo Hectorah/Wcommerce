@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { JerseyProduct, JerseySize, JerseyVersion } from '../../types';
-import { X, Upload, Plus, Trash2, Video, Play } from 'lucide-react';
-import { FeedbackModal } from './FeedbackModal';
+import React, { useState, useEffect } from 'react';
+import { JerseyProduct } from '../../types';
+import { X } from 'lucide-react';
+import { ProductMediaSection } from './ProductMediaSection';
+import { SizesSelector } from './SizesSelector';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -10,21 +11,75 @@ interface ProductFormModalProps {
   initialData?: JerseyProduct | null;
 }
 
-const AVAILABLE_SIZES: JerseySize[] = ['S', 'M', 'L', 'XL', 'XXL'];
+interface FormErrors {
+  name?: string;
+  team?: string;
+  retailPrice?: string;
+  wholesalePrice?: string;
+  image?: string;
+  sizes?: string;
+}
+
+// Validación del formulario (fuera del componente para mantenerlo puro)
+const validateProduct = (data: Partial<JerseyProduct>): FormErrors => {
+  const errors: FormErrors = {};
+  const retail = Number(data.retailPrice || 0);
+  const wholesale = Number(data.wholesalePrice || 0);
+
+  if (!data.name?.trim()) errors.name = 'El nombre de la camiseta es obligatorio.';
+  if (!data.team?.trim()) errors.team = 'Indica el equipo o selección.';
+  if (!retail || retail <= 0) {
+    errors.retailPrice = 'Debe ser un precio mayor a 0.';
+  }
+  if (!wholesale || wholesale <= 0) {
+    errors.wholesalePrice = 'Debe ser un precio mayor a 0.';
+  } else if (retail > 0 && wholesale > retail) {
+    errors.wholesalePrice = 'El precio mayorista no puede superar al precio detal.';
+  }
+  if (!data.image && (!data.images || data.images.length === 0)) {
+    errors.image = 'Debe tener al menos una imagen.';
+  }
+  if (!data.sizes || data.sizes.length === 0) {
+    errors.sizes = 'Selecciona al menos una talla.';
+  }
+  return errors;
+};
+
+// Construye un JerseyProduct válido normalizando los datos del formulario
+const buildProduct = (data: Partial<JerseyProduct>): JerseyProduct => {
+  const images = [...(data.images || [])];
+  let image = data.image || '';
+  // Si solo hay imágenes secundarias, la primera pasa a ser la principal
+  if (!image && images.length > 0) {
+    image = images[0];
+    images.splice(0, 1);
+  }
+  return {
+    id: data.id || `prod-${Date.now()}`,
+    name: (data.name || '').trim(),
+    team: (data.team || '').trim(),
+    league: data.league || '',
+    season: data.season || '2024/2025',
+    category: data.category || 'clubes-europa',
+    version: data.version || 'Versión Fan',
+    retailPrice: Number(data.retailPrice || 0),
+    wholesalePrice: Number(data.wholesalePrice || 0),
+    image,
+    images,
+    badges: data.badges || [],
+    description: data.description || '',
+    sizes: data.sizes || [],
+    popularPlayers: data.popularPlayers,
+    isFeatured: data.isFeatured,
+    inStock: data.inStock !== false,
+    fabricTech: data.fabricTech,
+    video: data.video,
+  };
+};
 
 export function ProductFormModal({ isOpen, onClose, onSave, initialData }: ProductFormModalProps) {
   const [formData, setFormData] = useState<Partial<JerseyProduct>>({});
-  const [uploading, setUploading] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [newImageUrl, setNewImageUrl] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const [feedback, setFeedback] = useState<{
-    isOpen: boolean;
-    type: 'error' | 'info';
-    title: string;
-    message: string;
-  }>({ isOpen: false, type: 'info', title: '', message: '' });
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     if (initialData) {
@@ -48,6 +103,7 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
         inStock: true,
       });
     }
+    setFormErrors({});
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
@@ -56,9 +112,16 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
     const { name, value, type } = e.target;
     const finalValue = type === 'number' ? Number(value) : value;
     setFormData((prev) => ({ ...prev, [name]: finalValue }));
+    // Limpiar el error del campo mientras el usuario corrige
+    setFormErrors((prev) => {
+      if (!prev[name as keyof FormErrors]) return prev;
+      const next = { ...prev };
+      delete next[name as keyof FormErrors];
+      return next;
+    });
   };
 
-  const handleSizeToggle = (size: JerseySize) => {
+  const handleSizeToggle = (size: JerseyProduct['sizes'][number]) => {
     setFormData((prev) => {
       const currentSizes = prev.sizes || [];
       if (currentSizes.includes(size)) {
@@ -67,155 +130,33 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
         return { ...prev, sizes: [...currentSizes, size] };
       }
     });
+    setFormErrors((prev) => (prev.sizes ? { ...prev, sizes: undefined } : prev));
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64data = reader.result;
-        
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: file.name, data: base64data }),
-        });
-        
-        if (!response.ok) throw new Error('Upload failed');
-        
-        const { url } = await response.json();
-        
-        // If main image is empty, set it there, else add to images array
-        if (!formData.image) {
-          setFormData(prev => ({ ...prev, image: url }));
-        } else {
-          setFormData(prev => ({ ...prev, images: [...(prev.images || []), url] }));
-        }
-      };
-    } catch (err) {
-      console.error(err);
-      setFeedback({
-        isOpen: true,
-        type: 'error',
-        title: 'Error de Subida',
-        message: 'Ocurrió un problema al subir la imagen.'
+  const handleMediaChange = (patch: { image?: string; images?: string[]; video?: string }) => {
+    setFormData((prev) => ({ ...prev, ...patch }));
+    if (patch.video !== undefined || patch.image !== undefined) {
+      setFormErrors((prev) => {
+        if (!prev.image) return prev;
+        const next = { ...prev };
+        delete next.image;
+        return next;
       });
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
-
-  // Video upload handler (máx 15 segundos)
-  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Verificar duración antes de subir
-    const videoEl = document.createElement('video');
-    videoEl.preload = 'metadata';
-    videoEl.src = URL.createObjectURL(file);
-    await new Promise<void>(resolve => {
-      videoEl.onloadedmetadata = () => resolve();
-    });
-
-    if (videoEl.duration > 15) {
-      URL.revokeObjectURL(videoEl.src);
-      setFeedback({
-        isOpen: true,
-        type: 'error',
-        title: 'Video muy largo',
-        message: `El video tiene ${Math.round(videoEl.duration)}s. El máximo permitido es 15 segundos.`
-      });
-      if (videoInputRef.current) videoInputRef.current.value = '';
-      return;
-    }
-    URL.revokeObjectURL(videoEl.src);
-
-    setUploadingVideo(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: file.name, data: reader.result }),
-        });
-        if (!response.ok) throw new Error('Upload failed');
-        const { url } = await response.json();
-
-        // Eliminar video anterior si existe
-        if (formData.video?.startsWith('/uploads/')) {
-          await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: formData.video }) });
-        }
-        setFormData(prev => ({ ...prev, video: url }));
-      };
-    } catch (err) {
-      console.error(err);
-      setFeedback({
-        isOpen: true,
-        type: 'error',
-        title: 'Error de Subida',
-        message: 'Ocurrió un problema al subir el video.'
-      });
-    } finally {
-      setUploadingVideo(false);
-      if (videoInputRef.current) videoInputRef.current.value = '';
-    }
-  };
-
-  const handleRemoveVideo = async () => {
-    if (formData.video?.startsWith('/uploads/')) {
-      await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: formData.video }) });
-    }
-    setFormData(prev => ({ ...prev, video: undefined }));
-  };
-
-  const handleRemoveMainImage = async () => {
-    if (formData.image?.startsWith('/uploads/')) {
-      await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: formData.image }) });
-    }
-    setFormData(prev => ({ ...prev, image: '' }));
-  };
-
-  const handleAddImageUrl = () => {
-    if (!newImageUrl) return;
-    if (!formData.image) {
-      setFormData(prev => ({ ...prev, image: newImageUrl }));
-    } else {
-      setFormData(prev => ({ ...prev, images: [...(prev.images || []), newImageUrl] }));
-    }
-    setNewImageUrl('');
-  };
-
-  const handleRemoveImage = async (index: number) => {
-    const imgToRemove = formData.images?.[index];
-    if (imgToRemove && imgToRemove.startsWith('/uploads/')) {
-      await fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url: imgToRemove }) });
-    }
-    setFormData(prev => {
-      const newImages = [...(prev.images || [])];
-      newImages.splice(index, 1);
-      return { ...prev, images: newImages };
-    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.retailPrice || !formData.image) return;
-    onSave(formData as JerseyProduct);
+    const errors = validateProduct(formData);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    onSave(buildProduct(formData));
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
           <h2 className="text-xl font-bold text-slate-900">
@@ -228,6 +169,11 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
 
         <div className="overflow-y-auto p-6 text-slate-900">
           <form id="productForm" onSubmit={handleSubmit} className="space-y-6">
+            {Object.keys(formErrors).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">
+                Revisa el formulario: hay campos obligatorios sin completar o con valores inválidos.
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de la Camiseta *</label>
@@ -237,8 +183,9 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
                   value={formData.name || ''}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success ${formErrors.name ? 'border-red-400' : 'border-slate-300'}`}
                 />
+                {formErrors.name && <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>}
               </div>
 
               <div>
@@ -249,8 +196,9 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
                   value={formData.team || ''}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success ${formErrors.team ? 'border-red-400' : 'border-slate-300'}`}
                 />
+                {formErrors.team && <p className="text-xs text-red-500 mt-1">{formErrors.team}</p>}
               </div>
 
               <div>
@@ -302,8 +250,9 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
                   onChange={handleChange}
                   required
                   min={0}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success ${formErrors.retailPrice ? 'border-red-400' : 'border-slate-300'}`}
                 />
+                {formErrors.retailPrice && <p className="text-xs text-red-500 mt-1">{formErrors.retailPrice}</p>}
               </div>
 
               <div>
@@ -315,147 +264,24 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
                   onChange={handleChange}
                   required
                   min={0}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success"
+                  className={`w-full px-3 py-2 border rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success ${formErrors.wholesalePrice ? 'border-red-400' : 'border-slate-300'}`}
                 />
+                {formErrors.wholesalePrice && <p className="text-xs text-red-500 mt-1">{formErrors.wholesalePrice}</p>}
               </div>
 
-              {/* IMÁGENES */}
-              <div className="col-span-1 md:col-span-2 border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-4">
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                  Imágenes del Artículo
-                </h3>
-                
-                {/* Upload or Add URL */}
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 flex gap-2">
-                    <input
-                      type="url"
-                      placeholder="URL de imagen (ej: https://...)"
-                      value={newImageUrl}
-                      onChange={(e) => setNewImageUrl(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-brand-success text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddImageUrl}
-                      className="px-3 py-2 bg-slate-800 text-white rounded-lg text-sm font-medium hover:bg-slate-700 flex items-center gap-1"
-                    >
-                      <Plus className="w-4 h-4" /> Agregar
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>o</span>
-                    <label className="cursor-pointer px-4 py-2 bg-green-200 text-emerald-700 hover:bg-green-200 rounded-lg font-medium flex items-center gap-2 transition-colors">
-                      <Upload className="w-4 h-4" />
-                      {uploading ? 'Subiendo...' : 'Subir Archivo'}
-                      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileUpload} disabled={uploading} />
-                    </label>
-                  </div>
-                </div>
+              {/* IMÁGENES + VIDEO */}
+              <ProductMediaSection
+                image={formData.image || ''}
+                images={formData.images || []}
+                video={formData.video}
+                onChange={handleMediaChange}
+              />
+              {formErrors.image && (
+                <p className="col-span-1 md:col-span-2 text-xs text-red-500 font-medium -mt-2">{formErrors.image}</p>
+              )}
 
-                {/* Previews */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-2">
-                  {/* Main Image */}
-                  {formData.image && (
-                    <div className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white shadow-sm aspect-square">
-                      <img src={formData.image} alt="Main" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-center items-center gap-2">
-                        <span className="text-white text-[10px] font-bold bg-brand-success px-2 py-1 rounded">PRINCIPAL</span>
-                        <button type="button" onClick={handleRemoveMainImage} className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Extra Images */}
-                  {formData.images?.map((imgUrl, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border border-slate-200 bg-white shadow-sm aspect-square">
-                      <img src={imgUrl} alt={`Extra ${idx}`} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex justify-center items-center">
-                        <button type="button" onClick={() => handleRemoveImage(idx)} className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {(!formData.image && (!formData.images || formData.images.length === 0)) && (
-                  <p className="text-xs text-red-500 font-medium">Debe agregar al menos una imagen (la primera será la principal).</p>
-                )}
-              </div>
-
-              {/* VIDEO DEL ARTÍCULO */}
-              <div className="col-span-1 md:col-span-2 border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
-                <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-                  <Video className="w-4 h-4 text-brand-primary" />
-                  Video del Artículo (máx. 15 segundos)
-                </h3>
-
-                {formData.video ? (
-                  <div className="flex items-start gap-3">
-                    <video
-                      src={formData.video}
-                      className="w-28 h-28 rounded-lg object-cover border border-slate-200 bg-black"
-                      muted
-                      loop
-                      autoPlay
-                      playsInline
-                    />
-                    <div className="flex flex-col gap-2 justify-center">
-                      <span className="text-xs font-medium text-brand-success flex items-center gap-1">
-                        <Play className="w-3.5 h-3.5" /> Video cargado
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleRemoveVideo}
-                        className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 font-medium"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Quitar video
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-3">
-                    <label className="cursor-pointer px-4 py-2.5 bg-blue-200 text-amber-800 hover:bg-blue-200 rounded-lg font-medium flex items-center gap-2 transition-colors text-sm">
-                      <Upload className="w-4 h-4" />
-                      {uploadingVideo ? 'Subiendo...' : 'Subir Video (MP4 ≤ 15s)'}
-                      <input
-                        type="file"
-                        accept="video/mp4,video/*"
-                        className="hidden"
-                        ref={videoInputRef}
-                        onChange={handleVideoUpload}
-                        disabled={uploadingVideo}
-                      />
-                    </label>
-                    <p className="text-xs text-slate-500">El video aparecerá en la galería del producto en la tienda.</p>
-                  </div>
-                )}
-              </div>
-
-              <div className="col-span-1 md:col-span-2">
-                <label className="block text-sm font-medium text-slate-700 mb-2">Tallas Disponibles</label>
-                <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_SIZES.map((size) => {
-                    const isSelected = formData.sizes?.includes(size);
-                    return (
-                      <button
-                        key={size}
-                        type="button"
-                        onClick={() => handleSizeToggle(size)}
-                        className={`w-10 h-10 rounded-lg font-bold text-sm transition-colors ${
-                          isSelected
-                            ? 'bg-brand-success text-white border-transparent'
-                            : 'bg-white text-slate-700 border border-slate-300 hover:border-brand-success'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              {/* TALLAS */}
+              <SizesSelector sizes={formData.sizes || []} onToggle={handleSizeToggle} error={formErrors.sizes} />
 
               <div className="col-span-1 md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Descripción corta</label>
@@ -489,14 +315,6 @@ export function ProductFormModal({ isOpen, onClose, onSave, initialData }: Produ
           </button>
         </div>
       </div>
-
-      <FeedbackModal
-        isOpen={feedback.isOpen}
-        type={feedback.type}
-        title={feedback.title}
-        message={feedback.message}
-        onCancel={() => setFeedback(prev => ({ ...prev, isOpen: false }))}
-      />
     </div>
   );
 }
