@@ -1,6 +1,8 @@
-import React from 'react';
-import { Plus, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, Link2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Plus, Trash2, ArrowUp, ArrowDown, Image as ImageIcon, Link2, Upload } from 'lucide-react';
 import { HomeBanner } from '../../types';
+import { FeedbackModal } from './FeedbackModal';
+import { uploadImage } from '../../utils/uploadImage';
 
 interface BannersManagerProps {
   banners: HomeBanner[];
@@ -35,6 +37,64 @@ export function BannersManager({ banners, onChange }: BannersManagerProps) {
     const next = [...banners];
     [next[index], next[target]] = [next[target], next[index]];
     onChange(next);
+  };
+
+  // Subida de imagen (solo funciona en dev; en Vercel solo URLs públicas)
+  const [uploadingBannerId, setUploadingBannerId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadTargetRef = useRef<string | null>(null);
+  const [feedback, setFeedback] = useState<{
+    isOpen: boolean;
+    type: 'error' | 'info';
+    title: string;
+    message: string;
+  }>({ isOpen: false, type: 'info', title: '', message: '' });
+
+  const handleUploadClick = (bannerId: string) => {
+    uploadTargetRef.current = bannerId;
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const bannerId = uploadTargetRef.current;
+    if (!file || !bannerId) return;
+
+    // El servidor de subida solo existe en desarrollo (Vercel no lo tiene)
+    if (!import.meta.env.DEV) {
+      setFeedback({
+        isOpen: true,
+        type: 'info',
+        title: 'Solo URLs públicas',
+        message: 'En Vercel no existe el servidor de subida. Publica la imagen en un hosting (ImgBB, Cloudinary...) y pega su URL.'
+      });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setUploadingBannerId(bannerId);
+    try {
+      const url = await uploadImage(file);
+      update(bannerId, { image: url });
+    } catch (err) {
+      console.error(err);
+      setFeedback({
+        isOpen: true,
+        type: 'error',
+        title: 'Error de Subida',
+        message: 'Ocurrió un problema al subir la imagen.'
+      });
+    } finally {
+      setUploadingBannerId(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (bannerId: string, url: string) => {
+    if (import.meta.env.DEV && url.startsWith('/uploads/')) {
+      fetch('/api/upload', { method: 'DELETE', body: JSON.stringify({ url }) }).catch(() => {});
+    }
+    update(bannerId, { image: '' });
   };
 
   return (
@@ -87,12 +147,35 @@ export function BannersManager({ banners, onChange }: BannersManagerProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="md:col-span-2">
               <label className={labelClass}>URL de la imagen (obligatoria)</label>
-              <input
-                value={banner.image}
-                onChange={e => update(banner.id, { image: e.target.value })}
-                placeholder="https://..."
-                className={inputClass}
-              />
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-1 gap-2">
+                  <input
+                    value={banner.image}
+                    onChange={e => update(banner.id, { image: e.target.value })}
+                    placeholder="https://..."
+                    className={inputClass}
+                  />
+                  {banner.image && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(banner.id, banner.image)}
+                      className="px-3 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-red-100 hover:text-red-600 transition-colors whitespace-nowrap"
+                      title="Quitar imagen"
+                    >
+                      Quitar
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleUploadClick(banner.id)}
+                  disabled={uploadingBannerId === banner.id}
+                  className="px-4 py-2 bg-green-200 text-emerald-700 hover:bg-green-200 rounded-lg text-sm font-medium flex items-center gap-1.5 justify-center transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  <Upload className="w-4 h-4" />
+                  {uploadingBannerId === banner.id ? 'Subiendo...' : 'Subir Archivo'}
+                </button>
+              </div>
             </div>
             <div>
               <label className={labelClass}>Título</label>
@@ -138,6 +221,16 @@ export function BannersManager({ banners, onChange }: BannersManagerProps) {
       >
         <Plus className="w-4 h-4" /> Agregar Banner
       </button>
+
+      <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} />
+
+      <FeedbackModal
+        isOpen={feedback.isOpen}
+        type={feedback.type}
+        title={feedback.title}
+        message={feedback.message}
+        onCancel={() => setFeedback(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

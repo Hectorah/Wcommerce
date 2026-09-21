@@ -13,7 +13,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onOpenSizeGuide, onOpenWholesaleInfo, settings }) => {
   const stores = settings.stores || [];
-  const channelUrl = settings.whatsappChannelUrl || 'https://whatsapp.com/channel/0029Vb7RtomDZ4LQyRTqzJ1J';
+  const channelUrl = settings.whatsappChannelUrl;
   const socials = [
     { href: settings.instagramUrl, icon: <Instagram className="w-4 h-4" />, label: 'Instagram' },
     { href: settings.tiktokUrl, icon: <TikTokIcon className="w-4 h-4" />, label: 'TikTok' },
@@ -81,19 +81,23 @@ export const Footer: React.FC<FooterProps> = ({ onOpenSizeGuide, onOpenWholesale
 
           {/* Contacto WhatsApp */}
           <div>
-            <h5 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider mb-2.5">Contacto & Canal</h5>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
-              Únete a nuestro canal para ver novedades, ofertas y nuevos modelos al instante.
-            </p>
-            <a
-              href={channelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-brand-success hover:bg-brand-success text-white text-xs font-bold transition-colors shadow-sm shadow-brand-success/20 mb-3"
-            >
-              <WhatsAppIcon className="w-3.5 h-3.5" />
-              <span>Unirse al Canal de WhatsApp</span>
-            </a>
+            {channelUrl && (
+              <>
+                <h5 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider mb-2.5">Contacto & Canal</h5>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+                  Únete a nuestro canal para ver novedades, ofertas y nuevos modelos al instante.
+                </p>
+                <a
+                  href={channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-brand-success hover:bg-brand-success text-white text-xs font-bold transition-colors shadow-sm shadow-brand-success/20 mb-3"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5" />
+                  <span>Unirse al Canal de WhatsApp</span>
+                </a>
+              </>
+            )}
             {stores.length > 0 && (
               <p className="text-[10px] text-slate-400 mt-1">
                 📍 {stores[0].name}

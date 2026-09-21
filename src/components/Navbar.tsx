@@ -25,7 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenCart,
   onOpenSizeGuide,
   onOpenWholesaleInfo,
-  whatsappChannelUrl = 'https://whatsapp.com/channel/0029Vb7RtomDZ4LQyRTqzJ1J',
+  whatsappChannelUrl,
   announcement,
 }) => {
   return (
@@ -86,18 +86,20 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {/* Quick WhatsApp Channel */}
-            <div className="hidden sm:block">
-              <a
-                href={whatsappChannelUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold text-brand-success dark:text-brand-success bg-green-50 hover:bg-green-200 dark:bg-brand-success/20 dark:hover:bg-brand-success/20 rounded-full transition-colors border border-green-200/50 dark:border-emerald-800/50"
-                title="Canal de WhatsApp"
-              >
-                <WhatsAppIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden lg:inline">WhatsApp</span>
-              </a>
-            </div>
+            {whatsappChannelUrl && (
+              <div className="hidden sm:block">
+                <a
+                  href={whatsappChannelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-bold text-brand-success dark:text-brand-success bg-green-50 hover:bg-green-200 dark:bg-brand-success/20 dark:hover:bg-brand-success/20 rounded-full transition-colors border border-green-200/50 dark:border-emerald-800/50"
+                  title="Canal de WhatsApp"
+                >
+                  <WhatsAppIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span className="hidden lg:inline">WhatsApp</span>
+                </a>
+              </div>
+            )}
 
             {/* Cart Button */}
             <button
