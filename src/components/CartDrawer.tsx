@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { X, Trash2, Plus, Minus, Send, Sparkles, Tag, ShieldCheck, ArrowRight, User, MapPin, FileText } from 'lucide-react';
-import { CartItem, CustomerInfo } from '../types';
+import { X, Trash2, Plus, Minus, Send, Sparkles, Tag, ShieldCheck, ArrowRight, User, MapPin, FileText, Truck, Store, AlertTriangle } from 'lucide-react';
+import { CartItem, CustomerInfo, StoreLocation } from '../types';
 import { calculateCartSummary, generateWhatsAppMessage, buildWhatsAppUrl } from '../utils/cartUtils';
 import { WHOLESALE_MIN_ITEMS } from '../data/mockProducts';
 import { FlashLogo } from './FlashLogo';
 import { WhatsAppIcon } from './Icons';
+import { useBcvRate } from '../hooks/BcvRateContext';
+import { useDelivery } from '../hooks/DeliveryContext';
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface CartDrawerProps {
   onClearCart: () => void;
   whatsappNumbers: string[];
   storeName?: string;
+  pickupStores?: StoreLocation[];
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({
@@ -26,6 +29,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   onClearCart,
   whatsappNumbers,
   storeName,
+  pickupStores = [],
 }) => {
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: '',
@@ -34,7 +38,29 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
     notes: '',
   });
 
-  const summary = useMemo(() => calculateCartSummary(cartItems), [cartItems]);
+  const { settings: deliverySettings } = useDelivery();
+  const deliveryOn = deliverySettings.deliveryEnabled;
+  const pickupOn = deliverySettings.pickupEnabled;
+  const zones = deliverySettings.zones;
+
+  const [deliveryChoice, setDeliveryChoice] = useState<'pickup' | 'delivery' | null>(null);
+  const [selectedZoneId, setSelectedZoneId] = useState<string>(zones[0]?.id ?? '');
+  const [selectedStoreId, setSelectedStoreId] = useState<string>(pickupStores[0]?.id ?? '');
+
+  const availableMethods = [pickupOn ? 'pickup' as const : null, deliveryOn ? 'delivery' as const : null].filter(Boolean);
+  const anyDeliveryMethod = availableMethods.length > 0;
+  const requiresChoice = availableMethods.length >= 2;
+  // Si solo hay un método disponible, se preselecciona automáticamente.
+  const resolvedChoice: 'pickup' | 'delivery' | null = deliveryChoice ?? (availableMethods.length === 1 ? availableMethods[0] : null);
+
+  const selectedZone = zones.find(z => z.id === selectedZoneId) ?? null;
+  const selectedStore = pickupStores.find(s => s.id === selectedStoreId) ?? null;
+  const deliveryCost = resolvedChoice === 'delivery' && selectedZone ? selectedZone.cost : 0;
+  const noZones = deliveryOn && zones.length === 0;
+
+  const summary = useMemo(() => calculateCartSummary(cartItems, deliveryCost), [cartItems, deliveryCost]);
+  const { rate, formatBs, fecha } = useBcvRate();
+  const bcvRateForMessage = rate ?? undefined;
 
   // Selecciona un número al azar de los configurados (solo cuando cambia la lista)
   const selectedPhone = useMemo(() => {
@@ -45,7 +71,9 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
   const hasPhone = !!selectedPhone;
   const hasItems = cartItems.length > 0;
-  const canSendOrder = hasItems && hasPhone;
+  const methodResolved = !anyDeliveryMethod || (requiresChoice ? deliveryChoice !== null : resolvedChoice !== null);
+  const deliveryInvalid = resolvedChoice === 'delivery' && (!selectedZone || noZones);
+  const canSendOrder = hasItems && hasPhone && methodResolved && !deliveryInvalid;
 
   // Genera el link de WhatsApp solo en el momento del click
   const handleOrderClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -54,7 +82,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
       return;
     }
     try {
-      const message = generateWhatsAppMessage(cartItems, customerInfo, summary, storeName);
+      const deliveryInfo =
+        resolvedChoice === 'delivery'
+          ? {
+              method: 'delivery' as const,
+              zone: selectedZone
+                ? selectedZone.city
+                  ? `${selectedZone.name} (${selectedZone.city})`
+                  : selectedZone.name
+                : undefined,
+            }
+          : resolvedChoice === 'pickup'
+            ? { method: 'pickup' as const, pickupPlace: selectedStore?.name || deliverySettings.pickupNote }
+            : null;
+      const message = generateWhatsAppMessage(cartItems, customerInfo, summary, storeName, bcvRateForMessage, deliveryInfo);
       const url = buildWhatsAppUrl(selectedPhone, message);
       (e.currentTarget as HTMLAnchorElement).href = url;
     } catch (err) {
@@ -221,6 +262,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <span className="text-slate-500 dark:text-slate-400 text-[10px]">
                             ${unitPrice} c/u
                           </span>
+                          {rate && (
+                            <span className="text-[9px] text-slate-400 dark:text-slate-500 font-mono block">
+                              {formatBs(rate * unitPrice)} c/u
+                            </span>
+                          )}
                         </div>
 
                         {(item.customName || item.customNumber) && (
@@ -236,6 +282,11 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                           <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white font-mono">
                             ${itemTotal}
                           </span>
+                          {rate && (
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block">
+                              {formatBs(rate * itemTotal)}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-0.5">
@@ -325,6 +376,122 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
 
 
               </div>
+
+              {/* Método de Entrega (pickup / delivery) */}
+              {anyDeliveryMethod && (
+                <div className="bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase font-black tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                      <Truck className="w-3 h-3 text-brand-primary" />
+                      Método de Entrega
+                    </span>
+                    {requiresChoice && resolvedChoice === null && (
+                      <span className="text-[10px] font-bold text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> Selecciona una opción
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {pickupOn && (
+                      <button
+                        type="button"
+                        onClick={() => setDeliveryChoice('pickup')}
+                        className={`p-3 rounded-xl border text-left transition-all ${resolvedChoice === 'pickup'
+                          ? 'border-brand-primary bg-brand-primary/10 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-brand-primary/40'
+                          }`}
+                      >
+                        <Store className={`w-4 h-4 mb-1 ${resolvedChoice === 'pickup' ? 'text-brand-primary' : 'text-slate-400'}`} />
+                        <span className="block text-xs font-bold text-slate-900 dark:text-white">Retiro en tienda</span>
+                        <span className="block text-[10px] font-bold text-brand-success">Gratis</span>
+                      </button>
+                    )}
+
+                    {deliveryOn && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeliveryChoice('delivery');
+                          if (!selectedZoneId && zones.length > 0) setSelectedZoneId(zones[0].id);
+                        }}
+                        className={`p-3 rounded-xl border text-left transition-all ${resolvedChoice === 'delivery'
+                          ? 'border-brand-primary bg-brand-primary/10 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-brand-primary/40'
+                          }`}
+                      >
+                        <Truck className={`w-4 h-4 mb-1 ${resolvedChoice === 'delivery' ? 'text-brand-primary' : 'text-slate-400'}`} />
+                        <span className="block text-xs font-bold text-slate-900 dark:text-white">Delivery a domicilio</span>
+                        <span className="block text-[10px] font-bold text-brand-primary font-mono">
+                          {zones[0] ? `Desde $${zones[0].cost} USD` : 'Sin zonas'}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+
+                  {resolvedChoice === 'delivery' && (
+                    <div className="space-y-2">
+                      {noZones ? (
+                        <p className="text-[10px] text-amber-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          No hay zonas de delivery configuradas. Elige retiro en tienda.
+                        </p>
+                      ) : (
+                        <>
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block">
+                            Zona de entrega
+                          </label>
+                          <select
+                            value={selectedZoneId}
+                            onChange={e => setSelectedZoneId(e.target.value)}
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-lg border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-brand-primary"
+                          >
+                            {zones.map(zone => (
+                              <option key={zone.id} value={zone.id}>
+                                {zone.name}{zone.city ? ` — ${zone.city}` : ''} (${zone.cost} USD)
+                              </option>
+                            ))}
+                          </select>
+                          {selectedZone && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              Costo de entrega: <strong className="font-mono text-brand-primary">${selectedZone.cost.toFixed(2)} USD</strong>
+                              {rate && <span className="font-mono"> · {formatBs(rate * selectedZone.cost)}</span>}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {resolvedChoice === 'pickup' && (
+                    <div className="space-y-2">
+                      {pickupStores.length > 0 ? (
+                        <>
+                          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block">
+                            Tienda de retiro
+                          </label>
+                          <select
+                            value={selectedStoreId}
+                            onChange={e => setSelectedStoreId(e.target.value)}
+                            className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-lg border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-brand-primary"
+                          >
+                            {pickupStores.map(store => (
+                              <option key={store.id} value={store.id}>{store.name}</option>
+                            ))}
+                          </select>
+                          {selectedStore && (
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                              {selectedStore.address} · {selectedStore.hours}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400">{deliverySettings.pickupNote}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
@@ -340,6 +507,12 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                 <span className="text-slate-500">Subtotal Detal ({summary.totalItems} prendas):</span>
                 <span className="font-mono">${summary.retailTotal.toFixed(2)} USD</span>
               </div>
+              {rate && (
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400">Equivalente en Bs (Tasa BCV):</span>
+                  <span className="font-mono text-slate-500">{formatBs(rate * summary.retailTotal)}</span>
+                </div>
+              )}
 
               {summary.isWholesale && (
                 <div className="flex justify-between text-brand-primary dark:text-brand-primary font-bold">
@@ -349,17 +522,43 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
                   <span className="font-mono">-${summary.totalSaved.toFixed(2)} USD</span>
                 </div>
               )}
+              {summary.isWholesale && rate && (
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-slate-400">-</span>
+                  <span className="font-mono text-brand-primary/70">-{formatBs(rate * summary.totalSaved)}</span>
+                </div>
+              )}
+
+              {summary.deliveryCost > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Delivery{selectedZone ? ` (${selectedZone.name})` : ''}:</span>
+                  <div className="text-right">
+                    <span className="font-mono">${summary.deliveryCost.toFixed(2)} USD</span>
+                    {rate && (
+                      <span className="block text-[10px] text-slate-400 font-mono">{formatBs(rate * summary.deliveryCost)}</span>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-2 border-t border-slate-200 dark:border-slate-800 flex justify-between items-baseline">
                 <div>
                   <span className="text-xs sm:text-sm font-black text-slate-900 dark:text-white block">TOTAL ESTIMADO:</span>
-                  <span className="text-[10px] text-slate-500">Tarifa {summary.isWholesale ? 'Mayorista' : 'Detal'}</span>
+                  <span className="text-[10px] text-slate-500">
+                    Tarifa {summary.isWholesale ? 'Mayorista' : 'Detal'}
+                    {summary.deliveryCost > 0 ? ' · Incluye envío' : ''}
+                  </span>
                 </div>
                 <div className="text-right">
                   <span className="text-xl sm:text-2xl font-black text-slate-950 dark:text-brand-primary font-mono">
-                    ${summary.currentTotal.toFixed(2)}
+                    ${summary.grandTotal.toFixed(2)}
                   </span>
                   <span className="text-xs text-slate-500 ml-1">USD</span>
+                  {rate && (
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                      {formatBs(rate * summary.grandTotal)}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -380,7 +579,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
             ) : (
               <div className="w-full py-3 px-4 rounded-xl bg-slate-200 text-slate-400 font-black text-sm flex items-center justify-center gap-2 cursor-not-allowed">
                 <WhatsAppIcon className="w-4 h-4" />
-                <span>{!hasPhone ? 'Sin número configurado' : 'Agrega productos al pedido'}</span>
+                <span>{!hasPhone ? 'Sin número configurado' : !hasItems ? 'Agrega productos al pedido' : requiresChoice || anyDeliveryMethod ? 'Selecciona un método de entrega' : ''}</span>
               </div>
             )}
 

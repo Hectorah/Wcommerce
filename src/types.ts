@@ -73,6 +73,13 @@ export interface SiteSettings {
 
   // Banners de portada
   banners: HomeBanner[];
+
+  // Guía / información configurable (puede o no ser una guía de tallas)
+  infoGuideEnabled: boolean;
+  infoGuideTitle: string;
+  infoGuideSubtitle: string;
+  infoGuideShowSizes: boolean; // Incluir la tabla de tallas
+  infoGuideItems: InfoGuideItem[];
 }
 
 export interface StoreLocation {
@@ -91,4 +98,31 @@ export interface HomeBanner {
   ctaText: string;
   link: string;
   active: boolean;
+}
+
+export interface InfoGuideItem {
+  id: string;
+  title: string;
+  body: string;
+}
+
+export interface GeoPoint {
+  lat: number;
+  lng: number;
+}
+
+export interface GeoDeliveryZone {
+  id: string;
+  name: string;
+  city: string;
+  cost: number; // Costo del delivery en USD
+  center: GeoPoint;
+  radiusKm: number;
+}
+
+export interface DeliverySettings {
+  deliveryEnabled: boolean;
+  pickupEnabled: boolean;
+  pickupNote: string;
+  zones: GeoDeliveryZone[];
 }

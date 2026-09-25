@@ -1,7 +1,8 @@
 import React from 'react';
-import { ShoppingBag, ShieldCheck, HelpCircle, Sun, Moon } from 'lucide-react';
+import { ShoppingBag, ShieldCheck, HelpCircle, Sun, Moon, TrendingUp } from 'lucide-react';
 import { FlashLogo } from './FlashLogo';
 import { WhatsAppIcon } from './Icons';
+import { useBcvRate } from '../hooks/BcvRateContext';
 
 interface NavbarProps {
   cartItemCount: number;
@@ -14,6 +15,7 @@ interface NavbarProps {
   onOpenWholesaleInfo: () => void;
   whatsappChannelUrl?: string;
   announcement?: { text: string; link: string } | null;
+  infoGuideEnabled?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -27,7 +29,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenWholesaleInfo,
   whatsappChannelUrl,
   announcement,
+  infoGuideEnabled = true,
 }) => {
+  const { rate, formatBs, fecha, status } = useBcvRate();
+  const cartTotalBs = rate ? formatBs(rate * cartTotal, 0) : null;
+
   return (
 
 
@@ -57,13 +63,25 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="text-[10px] px-1.5 py-0.2 bg-brand-primary/20 text-brand-primary dark:text-brand-primary rounded font-mono font-bold">3+ unid</span>
             </button>
 
-            <button
-              onClick={onOpenSizeGuide}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-transparent hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 transition-colors"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>Guía de Tallas</span>
-            </button>
+            {rate && (
+              <div
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 transition-colors"
+                title={`Dólar oficial BCV${fecha ? ` · ${fecha}` : ''}`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-brand-primary" />
+                <span className="font-mono font-bold">Tasa BCV {formatBs(rate, 2)}</span>
+              </div>
+            )}
+
+            {infoGuideEnabled && (
+              <button
+                onClick={onOpenSizeGuide}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-transparent hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Guía de Tallas</span>
+              </button>
+            )}
           </div>
 
           {/* Right Action: Theme Switcher + Direct WhatsApp + Cart */}
@@ -129,9 +147,16 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {cartItemCount === 0 ? 'Pedido' : isWholesale ? 'Mayorista' : 'Mi Pedido'}
                 </span>
                 {cartItemCount > 0 && (
-                  <span className="text-xs sm:text-sm font-black font-mono">
-                    ${cartTotal.toFixed(0)}
-                  </span>
+                  <>
+                    <span className="text-xs sm:text-sm font-black font-mono">
+                      ${cartTotal.toFixed(0)}
+                    </span>
+                    {cartTotalBs && (
+                      <span className="hidden md:block text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                        {cartTotalBs}
+                      </span>
+                    )}
+                  </>
                 )}
               </div>
             </button>

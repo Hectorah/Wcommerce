@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Check, HelpCircle, Sparkles, Play } from 'lucide-react';
 import { JerseyProduct, JerseySize } from '../types';
+import { useBcvRate } from '../hooks/BcvRateContext';
 
 interface ProductDetailModalProps {
   product: JerseyProduct | null;
@@ -8,6 +9,7 @@ interface ProductDetailModalProps {
   isWholesaleActive: boolean;
   onAddToCart: (product: JerseyProduct, size: JerseySize, quantity: number, customName?: string, customNumber?: string) => void;
   onOpenSizeGuide: () => void;
+  infoGuideEnabled?: boolean;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -16,8 +18,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   isWholesaleActive,
   onAddToCart,
   onOpenSizeGuide,
+  infoGuideEnabled = true,
 }) => {
   if (!product) return null;
+
+  const { rate, formatBs } = useBcvRate();
 
   const [selectedSize, setSelectedSize] = useState<JerseySize>(product.sizes[0] || 'M');
   const [quantity, setQuantity] = useState<number>(1);
@@ -159,10 +164,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <div>
                 <span className="text-[9px] uppercase font-bold text-slate-400 block">Detal (1 a 2)</span>
                 <span className="text-base font-black text-slate-900 dark:text-white font-mono">${product.retailPrice} USD</span>
+                {rate && (
+                  <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{formatBs(rate * product.retailPrice)}</span>
+                )}
               </div>
               <div className="text-right">
                 <span className="text-[9px] uppercase font-bold text-brand-primary block">Mayorista (3+)</span>
                 <span className="text-lg font-black text-brand-primary font-mono">${product.wholesalePrice} USD</span>
+                {rate && (
+                  <span className="block text-[10px] text-brand-primary/70 dark:text-brand-primary/60 font-mono mt-0.5">{formatBs(rate * product.wholesalePrice)}</span>
+                )}
               </div>
             </div>
 
@@ -170,13 +181,15 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div>
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 <span>Talla:</span>
-                <button
-                  type="button"
-                  onClick={onOpenSizeGuide}
-                  className="text-brand-primary dark:text-brand-primary hover:underline flex items-center gap-1 text-[11px]"
-                >
-                  <HelpCircle className="w-3 h-3" /> Guía de medidas
-                </button>
+                {infoGuideEnabled && (
+                  <button
+                    type="button"
+                    onClick={onOpenSizeGuide}
+                    className="text-brand-primary dark:text-brand-primary hover:underline flex items-center gap-1 text-[11px]"
+                  >
+                    <HelpCircle className="w-3 h-3" /> Guía de medidas
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-5 gap-1.5">

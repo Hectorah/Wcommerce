@@ -1,7 +1,8 @@
 import { CartItem, CustomerInfo } from '../types';
 import { WHOLESALE_MIN_ITEMS, STORE_NAME } from '../data/mockProducts';
+import { formatBs } from '../services/bcvRateService';
 
-export function calculateCartSummary(cartItems: CartItem[]) {
+export function calculateCartSummary(cartItems: CartItem[], deliveryCost = 0) {
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const isWholesale = totalItems >= WHOLESALE_MIN_ITEMS;
   const itemsNeededForWholesale = Math.max(0, WHOLESALE_MIN_ITEMS - totalItems);
@@ -33,6 +34,8 @@ export function calculateCartSummary(cartItems: CartItem[]) {
     currentTotal,
     totalSaved,
     potentialSavings,
+    deliveryCost,
+    grandTotal: currentTotal + deliveryCost,
   };
 }
 
@@ -40,7 +43,9 @@ export function generateWhatsAppMessage(
   cartItems: CartItem[],
   customerInfo: CustomerInfo,
   summary: ReturnType<typeof calculateCartSummary>,
-  storeName: string = STORE_NAME
+  storeName: string = STORE_NAME,
+  bcvRate?: number,
+  delivery?: { method: 'pickup' | 'delivery'; zone?: string; pickupPlace?: string } | null
 ): string {
   const itemsList = cartItems
     .map((item) => {
@@ -56,6 +61,21 @@ export function generateWhatsAppMessage(
     ? `Mayorista (3+ prendas | Ahorro: $${summary.totalSaved.toFixed(2)} USD)`
     : 'Detal (1 a 2 prendas)';
 
+  const totalUsd = summary.grandTotal;
+  const totalBs = bcvRate ? formatBs(bcvRate * totalUsd) : null;
+  const rateLine = bcvRate ? `\n💱 *Tasa BCV del día:* ${formatBs(bcvRate)} por USD` : '';
+  const totalBsLine = totalBs ? ` (${totalBs})` : '';
+
+  let deliveryLine = '🚚 *ENTREGA:* No especificada';
+  if (delivery?.method === 'delivery') {
+    deliveryLine = `🚚 *ENTREGA:* Delivery a domicilio${delivery.zone ? ` — ${delivery.zone}` : ''} (costo: $${summary.deliveryCost.toFixed(2)} USD)`;
+  } else if (delivery?.method === 'pickup') {
+    deliveryLine = `🚚 *ENTREGA:* Retiro en tienda${delivery.pickupPlace ? ` — ${delivery.pickupPlace}` : ''} (gratis)`;
+  }
+  const deliveryCostLine = summary.deliveryCost > 0
+    ? `\n💵 *COSTO DE ENVÍO:* $${summary.deliveryCost.toFixed(2)} USD`
+    : '';
+
   const customerName = customerInfo.name.trim() || 'Cliente no especificado';
   const customerCity = customerInfo.city.trim() || 'No especificada';
   const notesText = customerInfo.notes?.trim() ? `\n📝 *Notas/Dorsales:* ${customerInfo.notes.trim()}` : '';
@@ -66,10 +86,11 @@ export function generateWhatsAppMessage(
 ${itemsList}
 
 📊 *TIPO DE VENTA:* ${saleType}
+${deliveryLine}${deliveryCostLine}
 🔢 *TOTAL DE PRENDAS:* ${summary.totalItems} unidad${summary.totalItems === 1 ? '' : 'es'}
-💰 *TOTAL ESTIMADO:* $${summary.currentTotal.toFixed(2)} USD
+💰 *TOTAL ESTIMADO:* $${totalUsd.toFixed(2)} USD${totalBsLine}
 👤 *Cliente:* ${customerName}
-📍 *Ubicación / Envío:* ${customerCity}${notesText}
+📍 *Ubicación / Envío:* ${customerCity}${notesText}${rateLine}
 
 ¿Tienen disponibilidad de estos modelos para coordinar el pago y envío?`;
 }

@@ -223,6 +223,7 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
         onOpenWholesaleInfo={() => setIsWholesaleInfoOpen(true)}
         whatsappChannelUrl={settings.whatsappChannelUrl}
         announcement={settings.announcementEnabled ? { text: settings.announcementText, link: settings.announcementLink } : null}
+        infoGuideEnabled={settings.infoGuideEnabled}
       />
 
       {/* Hero / Banner Section with Minimalist Calculator */}
@@ -290,6 +291,7 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
         onClearCart={handleClearCart}
         whatsappNumbers={settings.whatsappNumbers || []}
         storeName={settings.storeName}
+        pickupStores={settings.stores}
       />
 
       {/* Product Detail & Customization Modal */}
@@ -302,12 +304,14 @@ export function StoreFront({ products, settings }: { products: JerseyProduct[]; 
           setDetailModalProduct(null);
           setIsSizeGuideOpen(true);
         }}
+        infoGuideEnabled={settings.infoGuideEnabled}
       />
 
       {/* Size Guide Modal */}
       <SizeGuideModal
         isOpen={isSizeGuideOpen}
         onClose={() => setIsSizeGuideOpen(false)}
+        settings={settings}
       />
 
       {/* Wholesale Info & Policies Modal */}

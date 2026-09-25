@@ -9,6 +9,8 @@ import { AdminSidebar, AdminSection } from './AdminSidebar';
 import { StoreIdentityPanel } from './StoreIdentityPanel';
 import { StoreAppearancePanel } from './StoreAppearancePanel';
 import { StoreContactPanel } from './StoreContactPanel';
+import { StoreGuidesPanel } from './StoreGuidesPanel';
+import { StoreDeliveryPanel } from './StoreDeliveryPanel';
 import { StoreLocationsPanel } from './StoreLocationsPanel';
 import { BannersPanel } from './BannersPanel';
 
@@ -152,6 +154,8 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
     identidad: 'Identidad & Hero',
     apariencia: 'Apariencia & Colores',
     contacto: 'Contacto & WhatsApp',
+    guias: 'Guías & Ayuda',
+    envios: 'Delivery & Pickup',
     sedes: 'Sedes Físicas',
     banners: 'Banners de Portada',
   };
@@ -164,6 +168,10 @@ export function AdminDashboard({ products, setProducts, settings, setSettings, o
         return <StoreAppearancePanel draft={draftSettings} onChange={patchSettings} />;
       case 'contacto':
         return <StoreContactPanel draft={draftSettings} onChange={patchSettings} />;
+      case 'guias':
+        return <StoreGuidesPanel draft={draftSettings} onChange={patchSettings} />;
+      case 'envios':
+        return <StoreDeliveryPanel />;
       case 'sedes':
         return <StoreLocationsPanel draft={draftSettings} onChange={patchSettings} />;
       case 'banners':

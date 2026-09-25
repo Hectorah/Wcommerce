@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Check, Eye, Tag } from 'lucide-react';
 import { JerseyProduct, JerseySize } from '../types';
+import { useBcvRate } from '../hooks/BcvRateContext';
 
 interface ProductCardProps {
   product: JerseyProduct;
@@ -29,6 +30,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const isPlayerVersion = product.version === 'Versión Jugador';
   const isRetro = product.category === 'retro';
+  const { rate, formatBs } = useBcvRate();
+  const retailBs = rate ? formatBs(rate * product.retailPrice) : null;
+  const wholesaleBs = rate ? formatBs(rate * product.wholesalePrice) : null;
 
   return (
     <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-primary dark:hover:border-brand-primary/20 transition-all duration-200 flex flex-col overflow-hidden shadow-sm hover:shadow-md">
@@ -118,6 +122,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </span>
                 <span className="text-[9px] text-slate-400">USD</span>
               </div>
+              {retailBs && (
+                <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{retailBs}</span>
+              )}
             </div>
 
             <div className="text-right">
@@ -130,6 +137,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 </span>
                 <span className="text-[9px] text-brand-primary dark:text-brand-primary font-bold">c/u</span>
               </div>
+              {wholesaleBs && (
+                <span className="block text-[9px] text-brand-primary/70 dark:text-brand-primary/60 font-mono mt-0.5">{wholesaleBs}</span>
+              )}
             </div>
           </div>
         </div>

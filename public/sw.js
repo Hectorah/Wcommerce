@@ -1,5 +1,5 @@
 // Service Worker para Wcommerce PWA
-const CACHE_NAME = 'wcommerce-v1.0';
+const CACHE_NAME = 'wcommerce-v1.1';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -8,7 +8,8 @@ const urlsToCache = [
   '/data/comida.json',
   '/data/tecnologia.json',
   '/data/repuestos.json',
-  '/data/farmacia.json'
+  '/data/farmacia.json',
+  '/data/geolocalizacion.json'
 ];
 
 // Instalación del Service Worker

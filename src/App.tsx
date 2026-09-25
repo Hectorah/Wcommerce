@@ -6,6 +6,8 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AdminLogin } from './components/admin/AdminLogin';
 import { PWAInstaller } from './components/PWAInstaller';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { BcvRateProvider } from './hooks/BcvRateContext';
+import { DeliveryProvider } from './hooks/DeliveryContext';
 
 const DEFAULT_SETTINGS: SiteSettings = {
   heroVideoUrl: '',
@@ -34,6 +36,22 @@ const DEFAULT_SETTINGS: SiteSettings = {
     },
   ],
   banners: [],
+  infoGuideEnabled: true,
+  infoGuideTitle: 'Guía Oficial de Tallas',
+  infoGuideSubtitle: 'Medidas en centímetros (Aproximadas estándar)',
+  infoGuideShowSizes: true,
+  infoGuideItems: [
+    {
+      id: 'fan',
+      title: 'Versión Fan',
+      body: 'Corte clásico regular, tela cómoda para uso diario. Pide tu talla regular.',
+    },
+    {
+      id: 'pro',
+      title: 'Versión Jugador Pro',
+      body: 'Corte atlético ceñido (Slim Fit). Si prefieres ajuste holgado, elige una talla superior.',
+    },
+  ],
 };
 
 // Completa settings viejos (localStorage/JSON) con los defaults actuales sin romper arrays
@@ -45,6 +63,7 @@ function normalizeSettings(raw: unknown): SiteSettings {
     whatsappNumbers: Array.isArray(s.whatsappNumbers) ? s.whatsappNumbers : [],
     stores: Array.isArray(s.stores) ? s.stores : DEFAULT_SETTINGS.stores,
     banners: Array.isArray(s.banners) ? s.banners : [],
+    infoGuideItems: Array.isArray(s.infoGuideItems) ? s.infoGuideItems : DEFAULT_SETTINGS.infoGuideItems,
   };
 }
 
@@ -194,28 +213,32 @@ export default function App() {
     <>
       {/* key=pathname: al navegar el boundary se reinicia y no queda "pegado" el error */}
       <ErrorBoundary key={location.pathname}>
-        <Routes>
-          <Route path="/" element={<StoreFront products={products} settings={settings} />} />
-          <Route
-            path="/admin"
-            element={
-              isAdminAuthenticated ? (
-                <AdminDashboard
-                  products={products}
-                  setProducts={setProducts}
-                  settings={settings}
-                  setSettings={setSettings}
-                  onLogout={handleLogout}
-                  activePreset={activePreset}
-                  setActivePreset={setActivePreset}
-                />
-              ) : (
-                <AdminLogin onLogin={handleLogin} />
-              )
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <BcvRateProvider>
+          <DeliveryProvider>
+            <Routes>
+              <Route path="/" element={<StoreFront products={products} settings={settings} />} />
+              <Route
+                path="/admin"
+                element={
+                  isAdminAuthenticated ? (
+                    <AdminDashboard
+                      products={products}
+                      setProducts={setProducts}
+                      settings={settings}
+                      setSettings={setSettings}
+                      onLogout={handleLogout}
+                      activePreset={activePreset}
+                      setActivePreset={setActivePreset}
+                    />
+                  ) : (
+                    <AdminLogin onLogin={handleLogin} />
+                  )
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </DeliveryProvider>
+        </BcvRateProvider>
       </ErrorBoundary>
       <PWAInstaller />
     </>

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Package, Home, LogOut, FileJson, Menu, X, Store, Palette, Share2, MapPin, Image as ImageIcon } from 'lucide-react';
+import { Package, Home, LogOut, FileJson, Menu, X, Store, Palette, Share2, MapPin, Image as ImageIcon, BookOpen, Truck } from 'lucide-react';
 
-export type AdminSection = 'productos' | 'identidad' | 'apariencia' | 'contacto' | 'sedes' | 'banners';
+export type AdminSection = 'productos' | 'identidad' | 'apariencia' | 'contacto' | 'guias' | 'envios' | 'sedes' | 'banners';
 
 const SECTION_ITEMS: { id: AdminSection; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'productos', label: 'Productos', icon: Package },
   { id: 'identidad', label: 'Identidad & Hero', icon: Store },
   { id: 'apariencia', label: 'Apariencia', icon: Palette },
   { id: 'contacto', label: 'Contacto', icon: Share2 },
+  { id: 'guias', label: 'Guías & Ayuda', icon: BookOpen },
+  { id: 'envios', label: 'Delivery & Pickup', icon: Truck },
   { id: 'sedes', label: 'Sedes Físicas', icon: MapPin },
   { id: 'banners', label: 'Banners', icon: ImageIcon },
 ];

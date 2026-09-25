@@ -1,0 +1,15 @@
+{
+  "deliveryEnabled": true,
+  "pickupEnabled": true,
+  "pickupNote": "Retiro gratis en tu tienda más cercana. Te avisamos cuando esté listo.",
+  "zones": [
+    {
+      "id": "valencia",
+      "name": "Valencia",
+      "city": "Valencia, Carabobo",
+      "cost": 1,
+      "center": { "lat": 10.1767, "lng": -67.9972 },
+      "radiusKm": 10
+    }
+  ]
+}
